@@ -1,0 +1,414 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Админка — Голосование за принты</title>
+<style>
+  :root {
+    --bg: #0e0e10;
+    --surface: #17171a;
+    --surface-hi: #1f1f24;
+    --border: #2a2a30;
+    --text: #f2f2f5;
+    --muted: #9a9aa5;
+    --accent: #ff5a3c;
+    --good: #63d18a;
+    --bad: #e26a6a;
+  }
+  @media (prefers-color-scheme: light) {
+    :root {
+      --bg: #f6f5f0;
+      --surface: #ffffff;
+      --surface-hi: #f0efea;
+      --border: #e4e2da;
+      --text: #1a1a1a;
+      --muted: #6a6a70;
+    }
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
+  }
+  header {
+    padding: 18px 24px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+  }
+  h1 { font-size: 15px; font-weight: 600; margin: 0; letter-spacing: 0.02em; text-transform: uppercase; }
+  .badge {
+    padding: 4px 10px;
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    font-size: 11px;
+    color: var(--muted);
+    font-variant-numeric: tabular-nums;
+  }
+  main { max-width: 1080px; margin: 0 auto; padding: 24px; display: flex; flex-direction: column; gap: 24px; }
+
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 20px 22px;
+  }
+  .card h2 {
+    margin: 0 0 14px;
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--muted);
+  }
+
+  input[type="text"], input[type="password"] {
+    background: var(--surface-hi);
+    color: var(--text);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 10px 14px;
+    font: inherit;
+    font-size: 14px;
+    width: 100%;
+    outline: none;
+  }
+  input:focus { border-color: var(--accent); }
+
+  button {
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    border-radius: 10px;
+    padding: 10px 18px;
+    font: inherit;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: filter 0.1s, transform 0.05s;
+  }
+  button:hover { filter: brightness(1.1); }
+  button:active { transform: translateY(1px); }
+  button:disabled { opacity: 0.5; cursor: not-allowed; }
+  button.ghost {
+    background: transparent; color: var(--muted);
+    border: 1px solid var(--border);
+    font-size: 12px; padding: 6px 12px;
+  }
+  button.ghost:hover { color: var(--text); border-color: var(--muted); }
+  button.danger { background: var(--bad); }
+
+  .drop {
+    border: 2px dashed var(--border);
+    border-radius: 12px;
+    padding: 28px 20px;
+    text-align: center;
+    color: var(--muted);
+    cursor: pointer;
+    transition: border-color 0.12s, background 0.12s;
+  }
+  .drop.over { border-color: var(--accent); background: rgba(255,90,60,0.06); color: var(--text); }
+  .drop b { color: var(--text); }
+  .drop input[type="file"] { display: none; }
+  .upload-status { margin-top: 12px; font-size: 13px; color: var(--muted); }
+
+  .lead-table { width: 100%; border-collapse: collapse; font-size: 14px; }
+  .lead-table th, .lead-table td {
+    padding: 10px 12px;
+    text-align: left;
+    border-bottom: 1px solid var(--border);
+    vertical-align: middle;
+  }
+  .lead-table th { color: var(--muted); font-weight: 500; font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; }
+  .lead-table td.num { font-variant-numeric: tabular-nums; }
+  .lead-table tr:last-child td { border-bottom: none; }
+  .rank { color: var(--muted); font-variant-numeric: tabular-nums; width: 36px; }
+  .rank.top { color: var(--accent); font-weight: 700; }
+  .thumb {
+    width: 56px; height: 56px; border-radius: 8px; object-fit: cover;
+    background: var(--surface-hi); border: 1px solid var(--border);
+  }
+  .bar {
+    display: inline-block; height: 6px; border-radius: 999px;
+    background: linear-gradient(90deg, var(--accent), var(--accent));
+    vertical-align: middle;
+  }
+  .stat-row { display: flex; gap: 24px; flex-wrap: wrap; }
+  .stat { font-variant-numeric: tabular-nums; }
+  .stat .n { font-size: 26px; font-weight: 700; }
+  .stat .l { font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); }
+
+  .row { display: flex; gap: 10px; align-items: center; }
+
+  .hint { color: var(--muted); font-size: 12px; margin-top: 8px; line-height: 1.5; }
+
+  .msg { padding: 10px 14px; border-radius: 8px; font-size: 13px; margin-top: 12px; }
+  .msg.err { background: rgba(226,106,106,0.12); color: var(--bad); }
+  .msg.ok  { background: rgba(99,209,138,0.12); color: var(--good); }
+
+  #gate {
+    max-width: 420px; margin: 80px auto; padding: 32px 28px;
+    background: var(--surface); border: 1px solid var(--border); border-radius: 14px;
+    display: flex; flex-direction: column; gap: 14px;
+  }
+  #gate h2 { margin: 0; font-size: 16px; }
+  #gate p { margin: 0; color: var(--muted); font-size: 13px; line-height: 1.5; }
+</style>
+</head>
+<body>
+
+<div id="gate">
+  <h2>Админка голосования</h2>
+  <p>Введи секрет админа (тот, что ты записал в поле <code>admin_secret</code> в Supabase).</p>
+  <input type="password" id="secretInput" placeholder="admin secret" autocomplete="off">
+  <button id="gateBtn">Войти</button>
+  <div id="gateMsg"></div>
+</div>
+
+<div id="app" style="display:none">
+  <header>
+    <h1>Админка · Голосование за принты</h1>
+    <div class="row">
+      <span class="badge" id="totalVotes">— голосов всего</span>
+      <button class="ghost" id="refresh">↻ Обновить</button>
+      <button class="ghost" id="logout">Выйти</button>
+    </div>
+  </header>
+
+  <main>
+    <section class="card">
+      <h2>Загрузить эскизы</h2>
+      <label class="drop" id="drop">
+        <input type="file" id="fileInput" multiple accept="image/*">
+        <div><b>Кликни или перетащи файлы</b> (можно несколько сразу)</div>
+        <div style="font-size:12px;margin-top:6px">PNG, JPG, WEBP. Имя файла станет названием эскиза.</div>
+      </label>
+      <div class="upload-status" id="uploadStatus"></div>
+    </section>
+
+    <section class="card">
+      <h2>Результаты</h2>
+      <div class="stat-row" style="margin-bottom:16px">
+        <div class="stat"><div class="n" id="statTotal">0</div><div class="l">Голосов всего</div></div>
+        <div class="stat"><div class="n" id="statDesigns">0</div><div class="l">Эскизов</div></div>
+        <div class="stat"><div class="n" id="statAvg">0</div><div class="l">Среднее матчей на эскиз</div></div>
+      </div>
+      <div style="overflow-x:auto">
+        <table class="lead-table" id="leadTable">
+          <thead>
+            <tr>
+              <th></th>
+              <th></th>
+              <th>Название</th>
+              <th class="num">Побед</th>
+              <th class="num">Поражений</th>
+              <th class="num">Матчей</th>
+              <th class="num">Рейтинг</th>
+              <th></th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="leadBody"></tbody>
+        </table>
+      </div>
+      <div class="hint">
+        Рейтинг = сглаженная доля побед (Байесов приор, чтобы 1 победа из 1 не выглядела как 100%).
+        Чем больше матчей — тем стабильнее рейтинг. При равных матчах — сортировка стабильна.
+      </div>
+    </section>
+  </main>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+<script src="config.js"></script>
+<script>
+(async () => {
+  const { createClient } = window.supabase;
+  const sb = createClient(window.CONFIG.SUPABASE_URL, window.CONFIG.SUPABASE_ANON_KEY);
+
+  const gate = document.getElementById('gate');
+  const app = document.getElementById('app');
+  const secretInput = document.getElementById('secretInput');
+  const gateBtn = document.getElementById('gateBtn');
+  const gateMsg = document.getElementById('gateMsg');
+
+  let SECRET = sessionStorage.getItem('mv_admin_secret') || '';
+
+  async function tryEnter(secret) {
+    gateMsg.innerHTML = '';
+    gateBtn.disabled = true;
+    const { data, error } = await sb.rpc('get_leaderboard', { secret });
+    gateBtn.disabled = false;
+    if (error) {
+      gateMsg.innerHTML = `<div class="msg err">Неверный секрет или проблема с Supabase: ${escapeHtml(error.message)}</div>`;
+      return false;
+    }
+    SECRET = secret;
+    sessionStorage.setItem('mv_admin_secret', secret);
+    gate.style.display = 'none';
+    app.style.display = 'block';
+    initApp(data || []);
+    return true;
+  }
+
+  gateBtn.addEventListener('click', () => tryEnter(secretInput.value.trim()));
+  secretInput.addEventListener('keydown', e => { if (e.key === 'Enter') tryEnter(secretInput.value.trim()); });
+
+  // авто-вход из sessionStorage или из ?key=
+  const urlSecret = new URLSearchParams(location.search).get('key');
+  const bootSecret = urlSecret || SECRET;
+  if (bootSecret) tryEnter(bootSecret).then(ok => { if (!ok) secretInput.focus(); });
+  else secretInput.focus();
+
+  function initApp(initialBoard) {
+    document.getElementById('logout').onclick = () => {
+      sessionStorage.removeItem('mv_admin_secret');
+      location.href = location.pathname;
+    };
+    document.getElementById('refresh').onclick = () => refresh();
+    setupUpload();
+    render(initialBoard);
+    fetchTotal();
+    setInterval(refresh, 15_000);
+  }
+
+  async function refresh() {
+    const [{ data: board, error: e1 }, { data: total, error: e2 }] = await Promise.all([
+      sb.rpc('get_leaderboard', { secret: SECRET }),
+      sb.rpc('get_total_votes', { secret: SECRET }),
+    ]);
+    if (e1) return console.error(e1);
+    render(board || []);
+    if (!e2 && total !== null) setTotal(total);
+  }
+  async function fetchTotal() {
+    const { data, error } = await sb.rpc('get_total_votes', { secret: SECRET });
+    if (!error) setTotal(data);
+  }
+  function setTotal(n) {
+    document.getElementById('totalVotes').textContent = `${n} голосов всего`;
+    document.getElementById('statTotal').textContent = n;
+  }
+
+  function score(wins, losses) {
+    // Байесов приор: 5 виртуальных побед + 5 поражений
+    return (wins + 5) / (wins + losses + 10);
+  }
+
+  function render(board) {
+    const rows = (board || []).map(r => ({
+      ...r,
+      wins: Number(r.wins) || 0,
+      losses: Number(r.losses) || 0,
+      total: Number(r.total) || 0,
+    }));
+    rows.forEach(r => r.rating = score(r.wins, r.losses));
+    rows.sort((a, b) => b.rating - a.rating || b.total - a.total);
+
+    const maxRating = Math.max(...rows.map(r => r.rating), 0.001);
+    const tbody = document.getElementById('leadBody');
+    tbody.innerHTML = rows.map((r, i) => {
+      const rank = i + 1;
+      const isTop = rank <= 3;
+      const winPct = r.total ? Math.round(r.wins / r.total * 100) : 0;
+      const barW = Math.round(r.rating / maxRating * 100);
+      return `
+        <tr>
+          <td><span class="rank ${isTop ? 'top' : ''}">${rank}</span></td>
+          <td><img class="thumb" src="${r.image_url}" alt=""></td>
+          <td>${escapeHtml(r.name || '—')}</td>
+          <td class="num">${r.wins}</td>
+          <td class="num">${r.losses}</td>
+          <td class="num">${r.total}</td>
+          <td class="num" title="${(r.rating*100).toFixed(1)}%">
+            <span class="bar" style="width:${barW}%"></span>
+            <span style="margin-left:8px;color:var(--muted)">${winPct}%</span>
+          </td>
+          <td>
+            <button class="ghost" data-copy="${escapeAttr(r.image_url)}">URL</button>
+          </td>
+          <td>
+            <button class="ghost danger" data-del="${r.id}" data-name="${escapeAttr(r.name || 'эскиз')}">×</button>
+          </td>
+        </tr>`;
+    }).join('');
+
+    tbody.querySelectorAll('[data-del]').forEach(btn => {
+      btn.onclick = () => deleteDesign(btn.dataset.del, btn.dataset.name);
+    });
+    tbody.querySelectorAll('[data-copy]').forEach(btn => {
+      btn.onclick = () => navigator.clipboard.writeText(btn.dataset.copy);
+    });
+
+    document.getElementById('statDesigns').textContent = rows.length;
+    const totalMatches = rows.reduce((s, r) => s + r.total, 0);
+    document.getElementById('statAvg').textContent = rows.length ? (totalMatches / rows.length).toFixed(1) : '0';
+  }
+
+  async function deleteDesign(id, name) {
+    if (!confirm(`Удалить эскиз "${name}"? Голоса за него тоже удалятся.`)) return;
+    const { error } = await sb.rpc('admin_delete_design', { secret: SECRET, p_id: id });
+    if (error) return alert('Ошибка: ' + error.message);
+    refresh();
+  }
+
+  function setupUpload() {
+    const drop = document.getElementById('drop');
+    const input = document.getElementById('fileInput');
+    const status = document.getElementById('uploadStatus');
+
+    drop.addEventListener('dragover', e => { e.preventDefault(); drop.classList.add('over'); });
+    drop.addEventListener('dragleave', () => drop.classList.remove('over'));
+    drop.addEventListener('drop', e => {
+      e.preventDefault();
+      drop.classList.remove('over');
+      handleFiles(e.dataTransfer.files);
+    });
+    input.addEventListener('change', () => handleFiles(input.files));
+
+    async function handleFiles(files) {
+      const list = Array.from(files || []).filter(f => f.type.startsWith('image/'));
+      if (!list.length) return;
+      let ok = 0, fail = 0;
+      for (const [i, file] of list.entries()) {
+        status.textContent = `Загружаю ${i + 1} из ${list.length}: ${file.name}…`;
+        try {
+          const ext = (file.name.split('.').pop() || 'png').toLowerCase().replace(/[^a-z0-9]/g, '');
+          const safeStem = file.name.replace(/\.[^.]+$/, '').slice(0, 60).replace(/[^\p{L}\p{N}_-]+/gu, '-');
+          const path = `${Date.now()}_${Math.random().toString(36).slice(2,8)}_${safeStem}.${ext}`;
+          const up = await sb.storage.from('sketches').upload(path, file, { contentType: file.type });
+          if (up.error) throw up.error;
+          const { data: pub } = sb.storage.from('sketches').getPublicUrl(path);
+          const { error } = await sb.rpc('admin_insert_design', {
+            secret: SECRET,
+            p_name: file.name.replace(/\.[^.]+$/, ''),
+            p_image_url: pub.publicUrl,
+          });
+          if (error) throw error;
+          ok++;
+        } catch (e) {
+          console.error(e);
+          fail++;
+        }
+      }
+      status.innerHTML = `<span class="msg ok">Загружено: ${ok}</span>${fail ? ` <span class="msg err">С ошибкой: ${fail}</span>` : ''}`;
+      input.value = '';
+      refresh();
+    }
+  }
+
+  function escapeHtml(s) {
+    return (s ?? '').toString().replace(/[<>&"']/g, c => ({'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;',"'":'&#39;'}[c]));
+  }
+  function escapeAttr(s) { return escapeHtml(s); }
+})();
+</script>
+</body>
+</html>

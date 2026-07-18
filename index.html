@@ -1,0 +1,476 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Голосование за принты</title>
+<style>
+  :root {
+    --bg: #0e0e10;
+    --surface: #17171a;
+    --surface-hi: #1f1f24;
+    --border: #2a2a30;
+    --text: #f2f2f5;
+    --muted: #9a9aa5;
+    --accent: #ff5a3c;
+  }
+  @media (prefers-color-scheme: light) {
+    :root {
+      --bg: #f6f5f0;
+      --surface: #ffffff;
+      --surface-hi: #f0efea;
+      --border: #e4e2da;
+      --text: #1a1a1a;
+      --muted: #6a6a70;
+    }
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    -webkit-font-smoothing: antialiased;
+  }
+  header {
+    padding: 18px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    border-bottom: 1px solid var(--border);
+  }
+  h1 {
+    font-size: 15px;
+    font-weight: 600;
+    margin: 0;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+  }
+  .progress {
+    font-variant-numeric: tabular-nums;
+    font-size: 13px;
+    color: var(--muted);
+    text-align: right;
+  }
+  .progress b { color: var(--text); font-weight: 600; }
+  .progress .sub { display: block; font-size: 11px; opacity: 0.75; margin-top: 2px; }
+  .progressbar {
+    display: block;
+    height: 3px;
+    background: var(--border);
+    border-radius: 999px;
+    overflow: hidden;
+    margin-top: 6px;
+    min-width: 120px;
+  }
+  .progressbar span {
+    display: block;
+    height: 100%;
+    background: var(--accent);
+    transition: width 0.25s ease;
+  }
+  main {
+    flex: 1;
+    padding: 24px 20px 40px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+    max-width: 1400px;
+    width: 100%;
+    margin: 0 auto;
+  }
+  .prompt {
+    text-align: center;
+    font-size: 15px;
+    color: var(--muted);
+  }
+  .arena {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    gap: 16px;
+    align-items: stretch;
+    width: 100%;
+  }
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    overflow: hidden;
+    cursor: pointer;
+    /* Hover больше НЕ трогает border — иначе после клика курсор остаётся
+       над картой и рамка выглядит как «выбранная» на следующей паре. */
+    transition: transform 0.12s ease, box-shadow 0.12s ease;
+    display: flex;
+    flex-direction: column;
+    outline: none;
+    user-select: none;
+    -webkit-user-select: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px -12px rgba(0,0,0,0.45);
+  }
+  .card:focus-visible {
+    outline: 2px solid var(--muted);
+    outline-offset: 2px;
+  }
+  .card:active { transform: translateY(0); }
+  .card.picked {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent) inset, 0 10px 28px -14px var(--accent);
+    transform: translateY(-2px);
+  }
+  .card.dimmed { opacity: 0.32; filter: grayscale(0.4); }
+  .card .imgwrap {
+    background: var(--surface-hi);
+    aspect-ratio: 1 / 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+  }
+  .card img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    display: block;
+    pointer-events: none;
+  }
+  .card .meta {
+    padding: 8px 14px;
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    border-top: 1px solid var(--border);
+    font-size: 13px;
+    color: var(--muted);
+  }
+  .card .kbd {
+    display: inline-block;
+    padding: 2px 6px;
+    font: 500 11px/1 ui-monospace, "SF Mono", monospace;
+    background: var(--surface-hi);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+  }
+  .vs {
+    align-self: center;
+    font: 700 24px/1 -apple-system, sans-serif;
+    color: var(--muted);
+    letter-spacing: 0.08em;
+    padding: 0 4px;
+  }
+  .state {
+    padding: 40px 20px;
+    text-align: center;
+    color: var(--muted);
+    font-size: 15px;
+    line-height: 1.6;
+    max-width: 520px;
+    margin: 0 auto;
+  }
+  .state h2 { color: var(--text); font-size: 26px; margin: 0 0 12px; }
+  .state .big { font-size: 60px; margin-bottom: 8px; }
+  .champion-img {
+    max-width: 100%;
+    max-height: 60vh;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 12px;
+    margin: 16px auto;
+    box-shadow: 0 24px 48px -24px var(--accent);
+  }
+  .champion-img img { display: block; max-width: 100%; height: auto; border-radius: 12px; }
+  .btn {
+    display: inline-block;
+    padding: 10px 20px;
+    border-radius: 999px;
+    font: inherit;
+    font-size: 14px;
+    cursor: pointer;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--muted);
+    transition: color 0.1s, border-color 0.1s, background 0.1s;
+    margin-top: 16px;
+  }
+  .btn:hover { color: var(--text); border-color: var(--muted); }
+  .btn.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .btn.primary:hover { filter: brightness(1.08); }
+  footer {
+    text-align: center;
+    padding: 16px;
+    color: var(--muted);
+    font-size: 11px;
+    opacity: 0.6;
+  }
+  @keyframes roundpulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.06); }
+    100% { transform: scale(1); }
+  }
+  .pulse { animation: roundpulse 0.4s ease; }
+  @media (max-width: 720px) {
+    header { padding: 14px 16px; }
+    main { padding: 16px 14px 28px; gap: 14px; }
+    .arena {
+      grid-template-columns: 1fr;
+      grid-template-rows: 1fr auto 1fr;
+      gap: 10px;
+    }
+    .vs { padding: 4px 0; font-size: 18px; }
+    .card .meta { display: none; }
+    .progressbar { min-width: 90px; }
+  }
+</style>
+</head>
+<body>
+<header>
+  <h1>Голосование за мерч</h1>
+  <div class="progress" id="progress"></div>
+</header>
+
+<main id="main">
+  <div class="state">
+    <div class="big">⏳</div>
+    Загружаю эскизы…
+  </div>
+</main>
+
+<footer>Твои друзья не видят промежуточных результатов — голосуй честно</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+<script src="config.js"></script>
+<script>
+(async () => {
+  const BRACKET_VERSION = 1;
+  const LS_BRACKET = 'mv_bracket';
+  const LS_SESSION = 'mv_session';
+
+  const { createClient } = window.supabase;
+  const sb = createClient(window.CONFIG.SUPABASE_URL, window.CONFIG.SUPABASE_ANON_KEY);
+  const main = document.getElementById('main');
+  const progressEl = document.getElementById('progress');
+
+  let sessionId = localStorage.getItem(LS_SESSION);
+  if (!sessionId) {
+    sessionId = crypto.randomUUID();
+    localStorage.setItem(LS_SESSION, sessionId);
+  }
+
+  // ---------- загрузка эскизов ----------
+  const { data: designs, error } = await sb.from('designs').select('id, image_url');
+  if (error) return showError(error.message);
+  if (!designs || designs.length < 2) {
+    return showState('🖼', 'Пока эскизов нет', 'Художник ещё не загрузил принты. Загляни позже.');
+  }
+  const designById = new Map(designs.map(d => [d.id, d]));
+  const designIds = designs.map(d => d.id);
+
+  // ---------- состояние турнира ----------
+  function shuffle(arr) {
+    const a = arr.slice();
+    for (let i = a.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [a[i], a[j]] = [a[j], a[i]];
+    }
+    return a;
+  }
+  function initBracket() {
+    return {
+      v: BRACKET_VERSION,
+      round: 1,
+      totalRounds: Math.ceil(Math.log2(designIds.length)),
+      current: shuffle(designIds),
+      winners: [],
+      pairIndex: 0,
+      champion: null,
+    };
+  }
+  function loadBracket() {
+    try {
+      const raw = localStorage.getItem(LS_BRACKET);
+      if (!raw) return initBracket();
+      const s = JSON.parse(raw);
+      if (s.v !== BRACKET_VERSION) return initBracket();
+      const idSet = new Set(designIds);
+      s.current = (s.current || []).filter(id => idSet.has(id));
+      s.winners = (s.winners || []).filter(id => idSet.has(id));
+      if (s.champion && !idSet.has(s.champion)) s.champion = null;
+      if (!s.champion && s.current.length < 2) return initBracket();
+      return s;
+    } catch { return initBracket(); }
+  }
+  function saveBracket(s) { localStorage.setItem(LS_BRACKET, JSON.stringify(s)); }
+  function resetBracket() {
+    const s = initBracket();
+    saveBracket(s);
+    return s;
+  }
+  function totalPairsThisRound(s) { return Math.floor(s.current.length / 2); }
+  function getCurrentPair(s) {
+    const i = s.pairIndex * 2;
+    if (i + 1 >= s.current.length) return null;
+    return [s.current[i], s.current[i + 1]];
+  }
+  function step(s, winnerId) {
+    s.winners.push(winnerId);
+    s.pairIndex += 1;
+    if (getCurrentPair(s) !== null) return { roundEnded: false };
+    // Round ended
+    if (s.current.length % 2 === 1) {
+      // Last unpaired sketch gets a bye
+      s.winners.push(s.current[s.current.length - 1]);
+    }
+    if (s.winners.length === 1) {
+      s.champion = s.winners[0];
+      return { roundEnded: true, tournamentDone: true };
+    }
+    s.round += 1;
+    s.current = shuffle(s.winners);
+    s.winners = [];
+    s.pairIndex = 0;
+    return { roundEnded: true, tournamentDone: false };
+  }
+
+  let bracket = loadBracket();
+
+  // ---------- рендер ----------
+  let submitting = false;
+
+  function renderProgress(pulse = false) {
+    if (bracket.champion) {
+      progressEl.innerHTML = '<b>Турнир пройден</b>';
+      return;
+    }
+    const pair = bracket.pairIndex + 1;
+    const totalPairs = totalPairsThisRound(bracket);
+    const roundPct = Math.round((bracket.pairIndex / totalPairs) * 100);
+    progressEl.innerHTML = `
+      <b>Раунд ${bracket.round}/${bracket.totalRounds}</b>
+      <span class="sub">Пара ${pair} из ${totalPairs}</span>
+      <span class="progressbar"><span style="width:${roundPct}%"></span></span>
+    `;
+    if (pulse) {
+      progressEl.classList.remove('pulse');
+      void progressEl.offsetWidth;
+      progressEl.classList.add('pulse');
+    }
+  }
+
+  function renderArena() {
+    submitting = false;
+    if (bracket.champion) return renderChampion();
+    const pair = getCurrentPair(bracket);
+    if (!pair) return; // shouldn't happen, but bail
+
+    const [aId, bId] = pair;
+    const a = designById.get(aId), b = designById.get(bId);
+    main.innerHTML = `
+      <div class="prompt">Какой принт лучше?</div>
+      <div class="arena" id="arena">
+        ${cardHtml(a, 'left', '←')}
+        <div class="vs">VS</div>
+        ${cardHtml(b, 'right', '→')}
+      </div>
+    `;
+    renderProgress();
+    document.querySelectorAll('.card').forEach(el => {
+      el.addEventListener('click', () => vote(el.dataset.side));
+      el.addEventListener('keydown', e => {
+        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); vote(el.dataset.side); }
+      });
+    });
+  }
+
+  function cardHtml(d, side, key) {
+    const label = side === 'left' ? 'Левый эскиз' : 'Правый эскиз';
+    return `
+      <div class="card" data-side="${side}" data-id="${d.id}" tabindex="0" role="button" aria-label="Голосовать за ${label}">
+        <div class="imgwrap"><img src="${d.image_url}" alt="" loading="lazy"></div>
+        <div class="meta"><span class="kbd">${key}</span></div>
+      </div>
+    `;
+  }
+
+  function renderChampion() {
+    const c = designById.get(bracket.champion);
+    main.innerHTML = `
+      <div class="state">
+        <div class="big">🏆</div>
+        <h2>Твой финалист</h2>
+        <div class="champion-img"><img src="${c.image_url}" alt=""></div>
+        <p>Спасибо! Твой голос учтён — сумма всех голосов друзей определит топ.</p>
+        <button class="btn" id="restart">Пройти турнир заново</button>
+      </div>
+    `;
+    renderProgress();
+    document.getElementById('restart').addEventListener('click', () => {
+      bracket = resetBracket();
+      renderArena();
+    });
+  }
+
+  async function vote(side) {
+    if (submitting || bracket.champion) return;
+    const pair = getCurrentPair(bracket);
+    if (!pair) return;
+    submitting = true;
+
+    const [aId, bId] = pair;
+    const winnerId = side === 'left' ? aId : bId;
+    const loserId  = side === 'left' ? bId : aId;
+
+    // визуальная обратная связь на текущей паре
+    document.querySelectorAll('.card').forEach(el => {
+      if (el.dataset.side === side) el.classList.add('picked');
+      else el.classList.add('dimmed');
+    });
+
+    // отправляем голос на сервер (async, не блокирует UI)
+    sb.from('votes').insert({
+      winner_id: winnerId,
+      loser_id: loserId,
+      voter_session: sessionId,
+    }).then(({ error }) => { if (error) console.error(error); });
+
+    // продвигаем брекет
+    const res = step(bracket, winnerId);
+    saveBracket(bracket);
+
+    // задержка чтобы человек увидел «я выбрал левого»
+    // и чтобы курсор точно не оставил :hover-эффекта визуально
+    setTimeout(() => {
+      if (res.tournamentDone) renderChampion();
+      else renderArena();
+      if (res.roundEnded && !res.tournamentDone) renderProgress(true);
+    }, 250);
+  }
+
+  // клавиатура — только когда идёт голосование
+  document.addEventListener('keydown', e => {
+    if (submitting || bracket.champion) return;
+    if (e.key === 'ArrowLeft')  vote('left');
+    if (e.key === 'ArrowRight') vote('right');
+  });
+
+  function showState(icon, title, sub) {
+    main.innerHTML = `<div class="state"><div class="big">${icon}</div><h2>${title}</h2><p>${sub || ''}</p></div>`;
+    progressEl.innerHTML = '';
+  }
+  function showError(msg) {
+    showState('⚠️', 'Что-то пошло не так', `<span style="font-family:ui-monospace,monospace;font-size:12px;color:#c66;">${msg}</span>`);
+  }
+
+  renderArena();
+})();
+</script>
+</body>
+</html>
