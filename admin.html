@@ -147,7 +147,7 @@
 
   .row { display: flex; gap: 10px; align-items: center; }
 
-  .hint { color: var(--muted); font-size: 12px; margin-top: 8px; line-height: 1.5; }
+  .hint { color: var(--muted); font-size: 12px; margin-top: 16px; line-height: 1.5; }
 
   .msg { padding: 10px 14px; border-radius: 8px; font-size: 13px; margin-top: 12px; }
   .msg.err { background: rgba(226,106,106,0.12); color: var(--bad); }
@@ -160,6 +160,157 @@
   }
   #gate h2 { margin: 0; font-size: 16px; }
   #gate p { margin: 0; color: var(--muted); font-size: 13px; line-height: 1.5; }
+
+  /* --- tabs --- */
+  .tabs {
+    display: flex;
+    gap: 2px;
+    border-bottom: 1px solid var(--border);
+    margin: 0 0 20px;
+    padding: 0;
+    flex-wrap: wrap;
+  }
+  .tab {
+    background: transparent;
+    color: var(--muted);
+    border: none;
+    padding: 10px 14px;
+    font: inherit;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -1px;
+    border-radius: 0;
+    transition: color 0.12s;
+  }
+  .tab:hover { color: var(--text); filter: none; }
+  .tab.active {
+    color: var(--text);
+    border-bottom-color: var(--accent);
+  }
+  .tab-content { animation: fadeIn 0.2s ease; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+
+  /* --- podium --- */
+  .podium {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 12px;
+    align-items: end;
+    padding: 20px 0 0;
+  }
+  .podium-slot { display: flex; flex-direction: column; text-align: center; min-width: 0; }
+  .podium-slot .medal { font-size: 28px; line-height: 1; padding-bottom: 8px; }
+  .podium-slot .imgwrap {
+    aspect-ratio: 1/1;
+    overflow: hidden;
+    border-radius: 12px;
+    border: 1px solid var(--border);
+    background: var(--surface-hi);
+    cursor: zoom-in;
+    transition: transform 0.12s ease, box-shadow 0.12s ease;
+  }
+  .podium-slot .imgwrap:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 14px 28px -14px rgba(0,0,0,0.55);
+  }
+  .podium-slot .imgwrap img {
+    width: 100%; height: 100%; object-fit: cover; display: block;
+    pointer-events: none;
+  }
+  .podium-slot .pedestal {
+    padding: 12px 8px;
+    margin-top: 10px;
+    border-radius: 8px 8px 0 0;
+    color: #17171a;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 4px;
+    overflow: hidden;
+  }
+  .podium-slot[data-rank="1"] .pedestal {
+    background: linear-gradient(180deg, #ffe07d, #f2a90c);
+    height: 150px;
+  }
+  .podium-slot[data-rank="2"] .pedestal {
+    background: linear-gradient(180deg, #e2e4e5, #9ea1a3);
+    height: 110px;
+  }
+  .podium-slot[data-rank="3"] .pedestal {
+    background: linear-gradient(180deg, #dfa16d, #a05f2a);
+    height: 78px;
+    color: #fff;
+  }
+  .podium-slot .pedestal .rate {
+    font-size: 22px;
+    font-weight: 800;
+    font-variant-numeric: tabular-nums;
+    line-height: 1;
+  }
+  .podium-slot .pedestal .stats {
+    font-size: 11px;
+    font-weight: 600;
+    opacity: 0.85;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: 0.02em;
+  }
+  .podium-slot .pedestal .name {
+    font-size: 11px;
+    opacity: 0.8;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    padding: 0 4px;
+  }
+  .podium-slot.empty .imgwrap, .podium-slot.empty .pedestal { opacity: 0.25; cursor: default; }
+  .podium-slot.empty .imgwrap { background: transparent; border-style: dashed; }
+  .podium-empty-state {
+    text-align: center; padding: 60px 20px; color: var(--muted); font-size: 15px;
+  }
+
+  /* --- lightbox --- */
+  .lightbox {
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.94);
+    z-index: 1000;
+    display: flex; align-items: center; justify-content: center;
+    padding: 40px 20px;
+    cursor: zoom-out;
+    -webkit-user-select: none;
+    user-select: none;
+    animation: lbFade 0.14s ease;
+  }
+  @keyframes lbFade { from { opacity: 0; } to { opacity: 1; } }
+  .lightbox img {
+    max-width: 100%; max-height: 100%; object-fit: contain;
+    border-radius: 8px;
+    box-shadow: 0 40px 80px rgba(0,0,0,0.6);
+  }
+  .lightbox-close {
+    position: absolute; top: 12px; right: 16px;
+    color: #fff; background: transparent; border: none;
+    font-size: 30px; line-height: 1; padding: 8px; cursor: pointer;
+    opacity: 0.8;
+  }
+  .lightbox-close:hover { opacity: 1; filter: none; }
+  .zoomable { cursor: zoom-in; }
+  .lead-table td .thumb { cursor: zoom-in; }
+
+  @media (max-width: 640px) {
+    main { padding: 16px; }
+    .card { padding: 16px; }
+    .podium { padding-top: 8px; }
+    .podium-slot .medal { font-size: 22px; }
+    .podium-slot[data-rank="1"] .pedestal { height: 110px; }
+    .podium-slot[data-rank="2"] .pedestal { height: 80px; }
+    .podium-slot[data-rank="3"] .pedestal { height: 60px; }
+    .podium-slot .pedestal .rate { font-size: 18px; }
+    .stat .n { font-size: 22px; }
+  }
 </style>
 </head>
 <body>
@@ -197,33 +348,53 @@
       <h2>Результаты</h2>
       <div class="stat-row" style="margin-bottom:16px">
         <div class="stat"><div class="n" id="statTotal">0</div><div class="l">Голосов всего</div></div>
+        <div class="stat"><div class="n" id="statVoters">—</div><div class="l">Прошедших</div></div>
         <div class="stat"><div class="n" id="statDesigns">0</div><div class="l">Эскизов</div></div>
-        <div class="stat"><div class="n" id="statAvg">0</div><div class="l">Среднее матчей на эскиз</div></div>
+        <div class="stat"><div class="n" id="statAvg">0</div><div class="l">Среднее матчей</div></div>
       </div>
-      <div style="overflow-x:auto">
-        <table class="lead-table" id="leadTable">
-          <thead>
-            <tr>
-              <th></th>
-              <th></th>
-              <th>Название</th>
-              <th class="num">Побед</th>
-              <th class="num">Поражений</th>
-              <th class="num">Матчей</th>
-              <th class="num">Рейтинг</th>
-              <th></th>
-              <th></th>
-            </tr>
-          </thead>
-          <tbody id="leadBody"></tbody>
-        </table>
+
+      <div class="tabs" role="tablist">
+        <button class="tab active" data-tab="podium" role="tab">🏆 Пьедестал</button>
+        <button class="tab" data-tab="list" role="tab">📊 Все места</button>
       </div>
+
+      <div id="viewPodium" class="tab-content">
+        <div id="podium" class="podium"></div>
+      </div>
+
+      <div id="viewList" class="tab-content" hidden>
+        <div style="overflow-x:auto">
+          <table class="lead-table" id="leadTable">
+            <thead>
+              <tr>
+                <th></th>
+                <th></th>
+                <th>Название</th>
+                <th class="num">Побед</th>
+                <th class="num">Поражений</th>
+                <th class="num">Матчей</th>
+                <th class="num">Рейтинг</th>
+                <th></th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody id="leadBody"></tbody>
+          </table>
+        </div>
+      </div>
+
       <div class="hint">
         Рейтинг = сглаженная доля побед (Байесов приор, чтобы 1 победа из 1 не выглядела как 100%).
-        Чем больше матчей — тем стабильнее рейтинг. При равных матчах — сортировка стабильна.
+        «Прошедших» = уникальные сессии, где было хотя бы одно голосование.
+        Клик по картинке — открыть на весь экран.
       </div>
     </section>
   </main>
+</div>
+
+<div id="lightbox" class="lightbox" hidden>
+  <button class="lightbox-close" aria-label="Закрыть" type="button">×</button>
+  <img id="lightboxImg" alt="">
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
@@ -240,6 +411,8 @@
   const gateMsg = document.getElementById('gateMsg');
 
   let SECRET = sessionStorage.getItem('mv_admin_secret') || '';
+  let currentTab = sessionStorage.getItem('mv_admin_tab') || 'podium';
+  let lastBoard = [];
 
   async function tryEnter(secret) {
     gateMsg.innerHTML = '';
@@ -261,7 +434,6 @@
   gateBtn.addEventListener('click', () => tryEnter(secretInput.value.trim()));
   secretInput.addEventListener('keydown', e => { if (e.key === 'Enter') tryEnter(secretInput.value.trim()); });
 
-  // авто-вход из sessionStorage или из ?key=
   const urlSecret = new URLSearchParams(location.search).get('key');
   const bootSecret = urlSecret || SECRET;
   if (bootSecret) tryEnter(bootSecret).then(ok => { if (!ok) secretInput.focus(); });
@@ -273,37 +445,105 @@
       location.href = location.pathname;
     };
     document.getElementById('refresh').onclick = () => refresh();
+    setupTabs();
     setupUpload();
-    render(initialBoard);
+    setupLightbox();
+    lastBoard = initialBoard || [];
+    render();
     fetchTotal();
+    fetchVoters();
     setInterval(refresh, 15_000);
   }
 
+  function setupTabs() {
+    document.querySelectorAll('.tab').forEach(btn => {
+      btn.addEventListener('click', () => switchTab(btn.dataset.tab));
+    });
+    applyTab();
+  }
+  function switchTab(name) {
+    currentTab = name;
+    sessionStorage.setItem('mv_admin_tab', name);
+    applyTab();
+    render();
+  }
+  function applyTab() {
+    document.querySelectorAll('.tab').forEach(b => b.classList.toggle('active', b.dataset.tab === currentTab));
+    document.getElementById('viewPodium').hidden = currentTab !== 'podium';
+    document.getElementById('viewList').hidden = currentTab !== 'list';
+  }
+
+  function setupLightbox() {
+    const lb = document.getElementById('lightbox');
+    const img = document.getElementById('lightboxImg');
+    const closeBtn = lb.querySelector('.lightbox-close');
+    lb.addEventListener('click', e => {
+      // клик по подложке или иконке крестика — закрыть; клик по самой картинке тоже закрывает
+      closeLightbox();
+    });
+    closeBtn.addEventListener('click', e => { e.stopPropagation(); closeLightbox(); });
+    document.addEventListener('keydown', e => { if (e.key === 'Escape') closeLightbox(); });
+
+    document.body.addEventListener('click', e => {
+      const z = e.target.closest('.zoomable');
+      if (!z) return;
+      const src = z.dataset.src || z.querySelector('img')?.src;
+      if (src) openLightbox(src);
+    });
+  }
+  function openLightbox(url) {
+    const lb = document.getElementById('lightbox');
+    const img = document.getElementById('lightboxImg');
+    img.src = url;
+    lb.hidden = false;
+    document.body.style.overflow = 'hidden';
+  }
+  function closeLightbox() {
+    document.getElementById('lightbox').hidden = true;
+    document.body.style.overflow = '';
+  }
+
   async function refresh() {
-    const [{ data: board, error: e1 }, { data: total, error: e2 }] = await Promise.all([
-      sb.rpc('get_leaderboard', { secret: SECRET }),
-      sb.rpc('get_total_votes', { secret: SECRET }),
+    const results = await Promise.allSettled([
+      sb.rpc('get_leaderboard',  { secret: SECRET }),
+      sb.rpc('get_total_votes',  { secret: SECRET }),
+      sb.rpc('get_total_voters', { secret: SECRET }),
     ]);
-    if (e1) return console.error(e1);
-    render(board || []);
-    if (!e2 && total !== null) setTotal(total);
+    const [rb, rv, rvv] = results;
+    if (rb.status === 'fulfilled' && !rb.value.error) {
+      lastBoard = rb.value.data || [];
+      render();
+    }
+    if (rv.status === 'fulfilled' && !rv.value.error && rv.value.data !== null) {
+      setTotal(rv.value.data);
+    }
+    if (rvv.status === 'fulfilled' && !rvv.value.error && rvv.value.data !== null) {
+      setVoters(rvv.value.data);
+    }
+    // Если get_total_voters ещё не создана в БД — просто пропускаем, не мешаем всему остальному.
   }
   async function fetchTotal() {
     const { data, error } = await sb.rpc('get_total_votes', { secret: SECRET });
     if (!error) setTotal(data);
   }
+  async function fetchVoters() {
+    const { data, error } = await sb.rpc('get_total_voters', { secret: SECRET });
+    if (!error && data !== null && data !== undefined) setVoters(data);
+  }
   function setTotal(n) {
     document.getElementById('totalVotes').textContent = `${n} голосов всего`;
     document.getElementById('statTotal').textContent = n;
   }
+  function setVoters(n) {
+    document.getElementById('statVoters').textContent = n;
+  }
 
   function score(wins, losses) {
-    // Байесов приор: 5 виртуальных побед + 5 поражений
     return (wins + 5) / (wins + losses + 10);
   }
 
-  function render(board) {
-    const rows = (board || []).map(r => ({
+  function computeRows() {
+    const rows = (lastBoard || []).map(r => ({
       ...r,
       wins: Number(r.wins) || 0,
       losses: Number(r.losses) || 0,
@@ -311,7 +551,58 @@
     }));
     rows.forEach(r => r.rating = score(r.wins, r.losses));
     rows.sort((a, b) => b.rating - a.rating || b.total - a.total);
+    return rows;
+  }
 
+  function render() {
+    const rows = computeRows();
+
+    document.getElementById('statDesigns').textContent = rows.length;
+    const totalMatches = rows.reduce((s, r) => s + r.total, 0);
+    document.getElementById('statAvg').textContent = rows.length ? (totalMatches / rows.length).toFixed(1) : '0';
+
+    if (currentTab === 'podium') renderPodium(rows);
+    else renderList(rows);
+  }
+
+  function renderPodium(rows) {
+    const container = document.getElementById('podium');
+    const anyVotes = rows.some(r => r.total > 0);
+    if (!anyVotes) {
+      container.innerHTML = `<div class="podium-empty-state" style="grid-column: 1 / -1">Ещё нет голосов. Как только друзья начнут — тут появятся лидеры.</div>`;
+      return;
+    }
+    // Визуально: [2-й, 1-й, 3-й], поэтому в DOM-порядке кладём slot-2, slot-1, slot-3
+    const order = [1, 0, 2];
+    container.innerHTML = order.map(i => {
+      const r = rows[i];
+      const rank = i + 1;
+      const medal = rank === 1 ? '🥇' : rank === 2 ? '🥈' : '🥉';
+      if (!r) {
+        return `
+          <div class="podium-slot empty" data-rank="${rank}">
+            <div class="medal">${medal}</div>
+            <div class="imgwrap"></div>
+            <div class="pedestal"><div class="rate">—</div></div>
+          </div>`;
+      }
+      const winPct = r.total ? Math.round(r.wins / r.total * 100) : 0;
+      return `
+        <div class="podium-slot" data-rank="${rank}">
+          <div class="medal">${medal}</div>
+          <div class="imgwrap zoomable" data-src="${escapeAttr(r.image_url)}">
+            <img src="${escapeAttr(r.image_url)}" alt="">
+          </div>
+          <div class="pedestal">
+            <div class="rate">${winPct}%</div>
+            <div class="stats">${r.wins}W · ${r.losses}L · ${r.total} матч.</div>
+            <div class="name">${escapeHtml(r.name || '—')}</div>
+          </div>
+        </div>`;
+    }).join('');
+  }
+
+  function renderList(rows) {
     const maxRating = Math.max(...rows.map(r => r.rating), 0.001);
     const tbody = document.getElementById('leadBody');
     tbody.innerHTML = rows.map((r, i) => {
@@ -322,7 +613,7 @@
       return `
         <tr>
           <td><span class="rank ${isTop ? 'top' : ''}">${rank}</span></td>
-          <td><img class="thumb" src="${r.image_url}" alt=""></td>
+          <td><img class="thumb zoomable" data-src="${escapeAttr(r.image_url)}" src="${escapeAttr(r.image_url)}" alt=""></td>
           <td>${escapeHtml(r.name || '—')}</td>
           <td class="num">${r.wins}</td>
           <td class="num">${r.losses}</td>
@@ -346,10 +637,6 @@
     tbody.querySelectorAll('[data-copy]').forEach(btn => {
       btn.onclick = () => navigator.clipboard.writeText(btn.dataset.copy);
     });
-
-    document.getElementById('statDesigns').textContent = rows.length;
-    const totalMatches = rows.reduce((s, r) => s + r.total, 0);
-    document.getElementById('statAvg').textContent = rows.length ? (totalMatches / rows.length).toFixed(1) : '0';
   }
 
   async function deleteDesign(id, name) {

@@ -114,6 +114,25 @@ end;
 $$;
 grant execute on function get_total_votes(text) to anon;
 
+-- Уникальные голосующие (по voter_session, который каждый браузер генерирует локально)
+create or replace function get_total_voters(secret text)
+returns bigint
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  stored text;
+begin
+  select value into stored from app_config where key = 'admin_secret';
+  if stored is null or stored = '' or secret is null or secret <> stored then
+    raise exception 'Unauthorized';
+  end if;
+  return (select count(distinct voter_session) from votes where voter_session is not null and voter_session <> '');
+end;
+$$;
+grant execute on function get_total_voters(text) to anon;
+
 -- 6. Админ-RPC для мутаций (требуют секрет; недоступны обычному анону)
 create or replace function admin_insert_design(secret text, p_name text, p_image_url text)
 returns uuid
